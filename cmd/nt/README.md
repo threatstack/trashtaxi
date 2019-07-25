@@ -1,6 +1,6 @@
 # nt
-"Sudo? More like su_dont_!" A member of the [Trash Taxi](blogpost-link) group
-of commands.
+"Sudo? More like su_dont_!" A member of the 
+[Trash Taxi](https://github.com/threatstack/trashtaxi) group of commands.
 
 Reducing the amount of "You Only Live Once" (YOLO) actions in your
 infrastructure is challenging, because sometimes you need to log into a server
