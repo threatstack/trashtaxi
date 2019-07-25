@@ -41,7 +41,7 @@ func main() {
 	config := NewConfig("/etc/nt.json")
 	fmt.Println("/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\")
 	fmt.Println("nt marks hosts for later deletion! This is a LAST RESORT root shell!")
-	fmt.Println(" Consider opening an ST ticket to fix this problem for future you!")
+	fmt.Println(" Consider opening a ticket to fix this problem for future you!")
 	fmt.Println("/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\")
 	fmt.Printf("Type 'yes' to mark host for later deletion & spawn a root shell: ")
 	garbage := bufio.NewReader(os.Stdin)

@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-var apiEndpoint = "https://epa.meta.threatstack.net/v1"
+var apiEndpoint = "https://taxi.tls.zone/v1"
 
 var rootca = `-----BEGIN CERTIFICATE-----
 MIICzTCCAlOgAwIBAgIURrXSQ94pBpE/hGr8on9+bUu2AuUwCgYIKoZIzj0EAwMw

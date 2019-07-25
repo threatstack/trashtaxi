@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var apiEndpoint = "https://epa.meta.threatstack.net/v1"
+var apiEndpoint = "https://taxi.tls.zone/v1"
 
 func main() {
 	app := cli.NewApp()
