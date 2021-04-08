@@ -3,7 +3,7 @@
 Here's a sample configuration file. Take a look at the subsections for 
 configuration variable information.
 
-```
+```json
 {
   "aws": {
     "dryrun": false,
@@ -16,14 +16,14 @@ configuration variable information.
   "tlscrt": "/secret/cert.pem",
   "tlskey": "/secret/key.pem",
   "iid_verify_cert": "/etc/aws_public_verifier.pem",
-  "timebetweenpickup: "2h",
+  "timebetweenpickup": "2h",
   "database": {
     "host": "",
     "port": 5432,
     "user": "",
     "pass": "",
     "name": "",
-    "sslmode: ""
+    "sslmode": ""
   },
   "accounts": {
     "123412341234": {
@@ -33,7 +33,7 @@ configuration variable information.
     },
     "432143214321": {
       "name": "prod",
-      "arn": "arn:aws:iam::432143214321:role/trashtaxi"
+      "arn": "arn:aws:iam::432143214321:role/trashtaxi",
       "externalid": "hellogoodbye"
     }
   },
@@ -45,7 +45,7 @@ configuration variable information.
     "enabled": true,
     "host": "graylog.tls.zone",
     "port": 12345
-  }
+  },
   "slack": {
     "enabled": true,
     "apikey": "xoxp...",
