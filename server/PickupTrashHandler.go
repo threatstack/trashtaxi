@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
@@ -140,10 +141,24 @@ func pickupTrash(w http.ResponseWriter, r *http.Request) {
 
 		_, err = svc.TerminateInstances(termReq)
 		if err != nil {
-			text := fmt.Sprintf("Unable to Terminate (%s)", err)
-			log.Warnf("/v1/trash/pickup: %s", text)
-			errs = multierror.Append(errs, fmt.Errorf("%s", text))
-			continue
+			if aerr, ok := err.(awserr.Error); ok {
+				// If the instance is already gone then move on (but delete it from the database)
+				if aerr.Code() == "InvalidInstanceID.NotFound" {
+					text := fmt.Sprintf("Instance not found, moving on! (%s)", err)
+					log.Warnf("/v1/trash/pickup: %s", text)
+					errs = multierror.Append(errs, fmt.Errorf("%s", text))
+				} else {
+					text := fmt.Sprintf("Unable to Terminate (%s)", err)
+					log.Warnf("/v1/trash/pickup: %s", text)
+					errs = multierror.Append(errs, fmt.Errorf("%s", text))
+					continue
+				}
+			} else {
+				text := fmt.Sprintf("Unable to Terminate (%s)", err)
+				log.Warnf("/v1/trash/pickup: %s", text)
+				errs = multierror.Append(errs, fmt.Errorf("%s", text))
+				continue
+			}
 		}
 		log.Infof("/v1/trash/pickup: TerminateInstance sent for %s ", v.Host)
 
