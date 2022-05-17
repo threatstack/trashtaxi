@@ -71,6 +71,28 @@ func pickupTrash(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonOutput)
 		lastPickupTime = funcStartTime
 		pickupLock = false
+
+		// If slack is enabled, send a message so folks know the taxi's still running
+		if conf.Slack.Enabled {
+			api := slack.New(conf.Slack.APIKey)
+			var msg []string
+			msg = append(msg, ":wave: No trash to take out, have a nice day!")
+
+			opts := slack.MsgOptionCompose(
+				slack.MsgOptionAsUser(true),
+				slack.MsgOptionDisableLinkUnfurl(),
+				slack.MsgOptionText(strings.Join(msg, "\n"), false),
+			)
+
+			for _, channel := range conf.Slack.Channels {
+				channelID, timestamp, err := api.PostMessage(channel, opts)
+				if err != nil {
+					log.Warnf("%s\n", err)
+				}
+				log.Infof("Message successfully sent to channel %s(%s) at %s", channel, channelID, timestamp)
+			}
+		}
+
 		return
 	}
 
