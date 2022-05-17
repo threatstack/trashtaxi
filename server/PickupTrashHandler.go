@@ -63,6 +63,39 @@ func pickupTrash(w http.ResponseWriter, r *http.Request) {
 	}
 	sortedTrash := sortGarbage(allTrash, true, true)
 
+	// If there's no garbage to pick up, might as well exit gracefully now.
+	if len(sortedTrash) == 0 {
+		log.Warnf("No garbage to pick up, exiting.")
+		resp := response{Accepted: true, Context: "Nothing to pickup"}
+		jsonOutput, _ := json.Marshal(&resp)
+		w.Write(jsonOutput)
+		lastPickupTime = funcStartTime
+		pickupLock = false
+
+		// If slack is enabled, send a message so folks know the taxi's still running
+		if conf.Slack.Enabled {
+			api := slack.New(conf.Slack.APIKey)
+			var msg []string
+			msg = append(msg, ":wave: No trash to take out, have a nice day!")
+
+			opts := slack.MsgOptionCompose(
+				slack.MsgOptionAsUser(true),
+				slack.MsgOptionDisableLinkUnfurl(),
+				slack.MsgOptionText(strings.Join(msg, "\n"), false),
+			)
+
+			for _, channel := range conf.Slack.Channels {
+				channelID, timestamp, err := api.PostMessage(channel, opts)
+				if err != nil {
+					log.Warnf("%s\n", err)
+				}
+				log.Infof("Message successfully sent to channel %s(%s) at %s", channel, channelID, timestamp)
+			}
+		}
+
+		return
+	}
+
 	// If slack is enabled, let's warn folks about whats about to happen
 	if conf.Slack.Enabled {
 		api := slack.New(conf.Slack.APIKey)
