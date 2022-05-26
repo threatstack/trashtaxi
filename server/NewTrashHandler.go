@@ -9,6 +9,7 @@ package server
 
 import (
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -19,11 +20,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	log "github.com/sirupsen/logrus"
-	"go.mozilla.org/pkcs7"
 )
 
 type incomingTrash struct {
-	IID string `json:"iid"`
+	IID       string `json:"iid"`
+	Signature string `json:"signature"`
 }
 
 // NewTrash - Add a new host
@@ -38,18 +39,39 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 
 	json.Unmarshal(buffer, &trash)
 
-	// Perform verification. VerifyPKCS7Doc is a scary function.
-	myIID, err := VerifyPKCS7Doc(trash.IID, conf.IIDCert)
+	rawIID, err := base64.StdEncoding.DecodeString(trash.IID)
 	if err != nil {
-		log.Warnf("/v1/trash/new: Unable to VerifyPKCS7Doc")
-		resp := response{Accepted: false, Context: "Unable to verify PKCS7 Document"}
+		log.Warnf("/v1/trash/new: Unable to un-base64 IID")
+		resp := response{Accepted: false, Context: "Unable to un-base64 IID"}
+		jsonOutput, _ := json.Marshal(&resp)
+		w.Write(jsonOutput)
+		return
+	}
+
+	rawSig, err := base64.StdEncoding.DecodeString(trash.Signature)
+	if err != nil {
+		log.Warnf("/v1/trash/new: Unable to un-base64 signature")
+		resp := response{Accepted: false, Context: "Unable to un-base64 signature"}
+		jsonOutput, _ := json.Marshal(&resp)
+		w.Write(jsonOutput)
+		return
+	}
+
+	var myIID ec2metadata.EC2InstanceIdentityDocument
+	json.Unmarshal(rawIID, &myIID)
+
+	// Perform verification. VerifyPKCS7Doc is a scary function.
+	validate := verifyIID(rawIID, rawSig)
+	if validate != nil {
+		log.Warnf("/v1/trash/new: Unable to verify instance document")
+		resp := response{Accepted: false, Context: "Unable to verify instance document"}
 		jsonOutput, _ := json.Marshal(&resp)
 		w.Write(jsonOutput)
 		return
 	}
 
 	// Do we know about this account? If not, let's not accept garbage from it.
-	if stringInSlice(myIID.AccountID, knownAWSAccts) == false {
+	if !stringInSlice(myIID.AccountID, knownAWSAccts) {
 		text := fmt.Sprintf("Cant collect hosts in unknown account (account %s not configured)", myIID.AccountID)
 		log.Warnf("/v1/trash/new: %s", text)
 		resp := response{Accepted: false, Context: text}
@@ -116,46 +138,29 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 	resp := response{Accepted: true}
 	jsonOutput, _ := json.Marshal(&resp)
 	w.Write(jsonOutput)
-	return
 }
 
-// VerifyPKCS7Doc - Ugliness that will take an IID and validator certificate
-// and return accordingly.
-func VerifyPKCS7Doc(rawIID string, validator string) (parsedIID ec2metadata.EC2InstanceIdentityDocument, err error) {
-	// Set up verifier certificate - read file, make it a PEM object, then a
-	// *x509.Certificate. Append to an array for use later.
-	iidVerifierRaw, err := ioutil.ReadFile(validator)
+func verifyIID(doc []byte, rsaSigRaw []byte) error {
+	if len(rsaSigRaw) == 0 {
+		return fmt.Errorf("signature is empty")
+	}
+	RSASig, err := base64.StdEncoding.DecodeString(string(rsaSigRaw))
+	if err != nil {
+		return fmt.Errorf("unable to un-base64 the instance certificate")
+	}
+	iidVerifierRaw, err := ioutil.ReadFile(conf.IIDCert)
 	if err != nil {
 		panic(err)
 	}
-	var iidVerifiers []*x509.Certificate
-	iidVerifierASN, _ := pem.Decode(iidVerifierRaw)
-	iidVerifierCrt, err := x509.ParseCertificate(iidVerifierASN.Bytes)
+	RSACertPEM, _ := pem.Decode(iidVerifierRaw)
+	RSACert, err := x509.ParseCertificate(RSACertPEM.Bytes)
 	if err != nil {
 		panic(err)
 	}
-	iidVerifiers = append(iidVerifiers, iidVerifierCrt)
 
-	// Pull in the information from the client - lot of parsing and whanot here
-	pkcs7B64 := fmt.Sprintf("-----BEGIN PKCS7-----\n%s\n-----END PKCS7-----",
-		rawIID)
-	pkcs7BER, pkcs7Rest := pem.Decode([]byte(pkcs7B64))
-	if len(pkcs7Rest) != 0 {
-		err = fmt.Errorf("pem.Decode failed: %s", err)
-		return
+	validate := RSACert.CheckSignature(x509.SHA256WithRSA, doc, RSASig)
+	if validate != nil {
+		return err
 	}
-	pkcs7Data, err := pkcs7.Parse(pkcs7BER.Bytes)
-	if err != nil {
-		err = fmt.Errorf("pkcs7.Parse failed: %s", err)
-		return
-	}
-	// Configure verifiers
-	pkcs7Data.Certificates = iidVerifiers
-
-	if pkcs7Data.Verify() != nil {
-		err = fmt.Errorf("pkcs7.Verify failed :(")
-	} else {
-		json.Unmarshal(pkcs7Data.Content, &parsedIID)
-	}
-	return
+	return nil
 }

@@ -19,8 +19,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
-	"github.com/nlopes/slack"
 	log "github.com/sirupsen/logrus"
+	"github.com/slack-go/slack"
 )
 
 // PickupTrash - Actually run the GC
@@ -46,7 +46,7 @@ func pickupTrash(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonOutput)
 		return
 	}
-	if pickupLock == true {
+	if pickupLock {
 		log.Warnf("Pickup countdown already in progress... ")
 		resp := response{Accepted: false, Context: "Pickup already running"}
 		jsonOutput, _ := json.Marshal(&resp)
@@ -145,8 +145,7 @@ func pickupTrash(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// different regions will have different creds, so let's store them somewhere
-	var awsCredentialCache map[string]*credentials.Credentials
-	awsCredentialCache = make(map[string]*credentials.Credentials)
+	var awsCredentialCache map[string]*credentials.Credentials = make(map[string]*credentials.Credentials)
 
 	for _, v := range sortedTrash {
 		log.Infof("/v1/trash/pickup: Picking up %s:%s(%s/%s)%s\n",
@@ -205,7 +204,7 @@ func pickupTrash(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If there's no slack, handle errors like we normally would.
-	if conf.Slack.Enabled == false {
+	if !conf.Slack.Enabled {
 		resp := response{Accepted: true}
 		if errs != nil {
 			resp.Context = errs.Error()
