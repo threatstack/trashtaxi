@@ -58,25 +58,25 @@ func sortGarbage(allTrash []Garbage, pickupRun bool, holidays bool) []Garbage {
 	types, roles := getHolidays()
 
 	for _, v := range allTrash {
-		if pickupRun == true {
-			if stringInSlice(v.Role, seenRoles) == true {
+		if pickupRun {
+			if stringInSlice(v.Role, seenRoles) {
 				continue
 			}
 
-			if stringInSlice(v.Role, roles) == true {
+			if stringInSlice(v.Role, roles) {
 				continue
 			}
 
-			if stringInSlice(v.Type, types) == true {
+			if stringInSlice(v.Type, types) {
 				continue
 			}
 			seenRoles = append(seenRoles, v.Role)
 		}
-		if holidays == true {
-			if stringInSlice(v.Role, roles) == true {
+		if holidays {
+			if stringInSlice(v.Role, roles) {
 				continue
 			}
-			if stringInSlice(v.Type, types) == true {
+			if stringInSlice(v.Type, types) {
 				continue
 			}
 		}

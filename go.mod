@@ -6,6 +6,9 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-lambda-go v1.6.1-0.20181026182034-fa1a118928cc
 	github.com/aws/aws-sdk-go v1.15.65-0.20181026201438-cedb7f105cb1
+	github.com/aws/aws-sdk-go-v2 v1.16.4 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.15.7 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.5 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/fatih/color v1.7.1-0.20181010231311-3f9d52f7176a // indirect
 	github.com/go-ini/ini v1.39.0 // indirect
@@ -15,7 +18,6 @@ require (
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/jinzhu/gorm v1.9.2-0.20181007004937-742154be9a26
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
-	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/lib/pq v1.0.1-0.20181016162627-9eb73efc1fcc // indirect
 	github.com/mattn/go-colorable v0.1.0 // indirect

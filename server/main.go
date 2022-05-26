@@ -77,13 +77,13 @@ func Start(conf config.GarbagedConfig) error {
 		knownAWSAccts = append(knownAWSAccts, k)
 	}
 
-	if conf.Debug == true {
+	if conf.Debug {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	if conf.Graylog.Enabled == true {
+	if conf.Graylog.Enabled {
 		connString := fmt.Sprintf("%s:%d", conf.Graylog.Host, conf.Graylog.Port)
 		hook := graylog.NewAsyncGraylogHook(connString, map[string]interface{}{"facility": "garbaged"})
 		defer hook.Flush()
@@ -108,22 +108,6 @@ func Start(conf config.GarbagedConfig) error {
 	}
 
 	return nil
-}
-
-func removeDuplicatesUnordered(elements []string) []string {
-	encountered := map[string]bool{}
-
-	// Create a map of all unique elements.
-	for v := range elements {
-		encountered[elements[v]] = true
-	}
-
-	// Place all keys from the map into a slice.
-	result := []string{}
-	for key := range encountered {
-		result = append(result, key)
-	}
-	return result
 }
 
 func stringInSlice(a string, list []string) bool {

@@ -76,13 +76,13 @@ func getTags(svc *ec2.EC2, instance string, roletag string, typetag string) (str
 		}
 	}
 
-	if foundrole == false {
+	if !foundrole {
 		funcErr = multierror.Append(funcErr,
-			fmt.Errorf("Unable to find a Role(tag '%s') for %s", roletag, instance))
+			fmt.Errorf("unable to find a Role(tag '%s') for %s", roletag, instance))
 	}
-	if foundtype == false {
+	if !foundtype {
 		funcErr = multierror.Append(funcErr,
-			fmt.Errorf("Unable to find a Type(tag '%s') for %s", typetag, instance))
+			fmt.Errorf("unable to find a Type(tag '%s') for %s", typetag, instance))
 	}
 
 	return ec2role, ec2type, funcErr.ErrorOrNil()

@@ -32,18 +32,15 @@ func cleanupTrash(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var errs *multierror.Error
 	var allTrash []Garbage
-	var awsCredentialCache map[string]*credentials.Credentials
-	awsCredentialCache = make(map[string]*credentials.Credentials)
+	var awsCredentialCache map[string]*credentials.Credentials = make(map[string]*credentials.Credentials)
 
 	if err := db.Find(&allTrash).Error; err != nil {
 		fmt.Printf("no: %v\n", err)
 	}
 
 	// Sort instances into a data stucture that lets us collect instances per account
-	var instances map[string]map[string][]string
-	instances = make(map[string]map[string][]string)
-	var allRemoved map[string]map[string][]string
-	allRemoved = make(map[string]map[string][]string)
+	var instances map[string]map[string][]string = make(map[string]map[string][]string)
+	var allRemoved map[string]map[string][]string = make(map[string]map[string][]string)
 	for _, v := range allTrash {
 		if instances[v.Region] == nil {
 			instances[v.Region] = map[string][]string{}
@@ -148,14 +145,4 @@ func cleanupTrash(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonOutput, _ := json.Marshal(&resp)
 	w.Write(jsonOutput)
-	return
-}
-
-func remove(s []string, r string) []string {
-	for i, v := range s {
-		if v == r {
-			return append(s[:i], s[i+1:]...)
-		}
-	}
-	return s
 }

@@ -35,7 +35,7 @@ func setupDB(dbcfg config.DatabaseConfig) (db *gorm.DB, err error) {
 	dbString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s%s",
 		dbcfg.Host, dbcfg.Port, dbcfg.User, dbcfg.Pass, dbcfg.Name, dbcfg.SSLMode, sslRootCertOption)
 	db, err = gorm.Open("postgres", dbString)
-	if conf.Debug == true {
+	if conf.Debug {
 		db.LogMode(true)
 	} else {
 		db.LogMode(false)

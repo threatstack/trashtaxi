@@ -3,13 +3,19 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/user"
 	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 )
 
 // NTConfig - Configuration Struct for the app
@@ -38,7 +44,7 @@ func NewConfig(fname string) NTConfig {
 
 func main() {
 	version := "1.0.0"
-	config := NewConfig("/etc/nt.json")
+	ttConfig := NewConfig("/etc/nt.json")
 	fmt.Println("/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\/!\\")
 	fmt.Println("nt marks hosts for later deletion! This is a LAST RESORT root shell!")
 	fmt.Println(" Consider opening a ticket to fix this problem for future you!")
@@ -54,18 +60,23 @@ func main() {
 	// Let's only break the seal if we're root or if local mode is set
 	// get PKCS7 signed aws identity document
 	currentUser, _ := user.Current()
-	if currentUser.Uid == "0" || config.Local == false {
-		getPKCS7, _ := http.Get(
-			"http://169.254.169.254/latest/dynamic/instance-identity/pkcs7")
-		defer getPKCS7.Body.Close()
-		getPKCS7Body, _ := ioutil.ReadAll(getPKCS7.Body)
-		pkcs7raw := strings.Replace(string(getPKCS7Body), "\n", "", -1)
+	if currentUser.Uid == "0" || !ttConfig.Local {
+		iid, sig, err := getInstanceIdentity()
+		if err != nil {
+			fmt.Println("<< nt: unable to get instance identity and signature")
+		}
 
 		// send to endpoint
-		endpoint := config.Endpoint + "/v1/trash/new"
-		iid := map[string]string{"iid": pkcs7raw}
-		shipIID, _ := json.Marshal(iid)
-		resp, _ := http.Post(endpoint, "application/json", bytes.NewBuffer(shipIID))
+		endpoint := ttConfig.Endpoint + "/v1/trash/new"
+		payload := map[string]string{
+			"iid":       sig,
+			"signature": iid,
+		}
+		shipIID, _ := json.Marshal(payload)
+		resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(shipIID))
+		if err != nil {
+			fmt.Printf("<< nt: ")
+		}
 		defer resp.Body.Close()
 
 		fmt.Printf(">> EPA Registration: %s\n", resp.Status)
@@ -82,7 +93,7 @@ func main() {
 	}
 
 	fmt.Printf(">> nt: begin session (v%s)\n", version)
-	proc, err := os.StartProcess(config.Shell, []string{config.Shell}, &pa)
+	proc, err := os.StartProcess(ttConfig.Shell, []string{ttConfig.Shell}, &pa)
 	if err != nil {
 		fmt.Println("<< nt: Unable to reassign stdin/stdout/stderr (?!)")
 		os.Exit(1)
@@ -95,4 +106,47 @@ func main() {
 	}
 
 	fmt.Printf("<< nt: thanks for coming in! (%s)\n", state.String())
+}
+
+func getInstanceIdentity() (string, string, error) {
+	ctx := context.TODO()
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return "", "", err
+	}
+
+	client := imds.NewFromConfig(cfg)
+	iidBytes, err := client.GetDynamicData(ctx, &imds.GetDynamicDataInput{
+		Path: "instance-identity/document",
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	iidBuf := new(strings.Builder)
+	_, err = io.Copy(iidBuf, iidBytes.Content)
+	if err != nil {
+		return "", "", err
+	}
+
+	iid := base64.StdEncoding.EncodeToString([]byte(iidBuf.String()))
+
+	fmt.Printf("%+v\n", iidBuf.String())
+
+	sigBytes, err := client.GetDynamicData(ctx, &imds.GetDynamicDataInput{
+		Path: "instance-identity/signature",
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	sigBuf := new(strings.Builder)
+	_, err = io.Copy(sigBuf, sigBytes.Content)
+	if err != nil {
+		return "", "", err
+	}
+
+	sig := base64.StdEncoding.EncodeToString([]byte(sigBuf.String()))
+
+	return iid, sig, nil
 }
