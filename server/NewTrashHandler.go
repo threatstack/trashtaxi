@@ -43,6 +43,7 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("/v1/trash/new: Unable to un-base64 IID")
 		resp := response{Accepted: false, Context: "Unable to un-base64 IID"}
 		jsonOutput, _ := json.Marshal(&resp)
+		w.WriteHeader(http.StatusForbidden)
 		w.Write(jsonOutput)
 		return
 	}
@@ -52,6 +53,7 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("/v1/trash/new: Unable to un-base64 signature")
 		resp := response{Accepted: false, Context: "Unable to un-base64 signature"}
 		jsonOutput, _ := json.Marshal(&resp)
+		w.WriteHeader(http.StatusForbidden)
 		w.Write(jsonOutput)
 		return
 	}
@@ -59,12 +61,13 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 	var myIID ec2metadata.EC2InstanceIdentityDocument
 	json.Unmarshal(rawIID, &myIID)
 
-	// Perform verification. VerifyPKCS7Doc is a scary function.
+	// Perform verification.
 	validate := verifyIID(rawIID, rawSig)
 	if validate != nil {
 		log.Warnf("/v1/trash/new: Unable to verify instance document")
 		resp := response{Accepted: false, Context: "Unable to verify instance document"}
 		jsonOutput, _ := json.Marshal(&resp)
+		w.WriteHeader(http.StatusForbidden)
 		w.Write(jsonOutput)
 		return
 	}
@@ -75,6 +78,7 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("/v1/trash/new: %s", text)
 		resp := response{Accepted: false, Context: text}
 		jsonOutput, _ := json.Marshal(&resp)
+		w.WriteHeader(http.StatusForbidden)
 		w.Write(jsonOutput)
 		return
 	}
@@ -86,6 +90,7 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("/v1/trash/new: %s", text)
 		resp := response{Accepted: false, Context: text}
 		jsonOutput, _ := json.Marshal(&resp)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonOutput)
 		return
 	}
@@ -99,6 +104,7 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("/v1/trash/new: %s", text)
 		resp := response{Accepted: false, Context: text}
 		jsonOutput, _ := json.Marshal(&resp)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonOutput)
 		return
 	}
@@ -112,6 +118,7 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("/v1/trash/new: %s", text)
 		resp := response{Accepted: false, Context: text}
 		jsonOutput, _ := json.Marshal(&resp)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonOutput)
 		return
 	}
@@ -128,6 +135,7 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 	if err := db.Create(&trashedHost).Error; err != nil {
 		resp := response{Accepted: false, Context: err.Error()}
 		jsonOutput, _ := json.Marshal(&resp)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonOutput)
 		return
 	}

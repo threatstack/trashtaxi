@@ -80,9 +80,14 @@ func main() {
 		shipIID, _ := json.Marshal(payload)
 		resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(shipIID))
 		if err != nil {
-			fmt.Printf("<< nt: ")
+			fmt.Printf("<< nt: unable to post response: %s", err.Error())
 		}
 		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			fmt.Printf("<< nt: Unable to register host, server responded with %d.\n", resp.StatusCode)
+			os.Exit(1)
+		}
 
 		fmt.Printf(">> EPA Registration: %s\n", resp.Status)
 	}
