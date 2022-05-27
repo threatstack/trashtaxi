@@ -1,3 +1,5 @@
 theme: jekyll-theme-minimal
 logo: taxi.png
 title: Trash Taxi
+domain: trash.taxi
+url: https://trash.taxi
