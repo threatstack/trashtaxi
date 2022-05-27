@@ -94,6 +94,7 @@ func getFromEndpoint(endpoint string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	json, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
 		return nil, readErr
@@ -106,6 +107,7 @@ func postToEndpoint(endpoint string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	json, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
 		return nil, readErr
@@ -123,6 +125,7 @@ func deleteFromEndpoint(endpoint string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	json, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
 		return nil, readErr
