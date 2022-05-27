@@ -110,19 +110,21 @@ func pickupTrash(w http.ResponseWriter, r *http.Request) {
 			log.Warnf("Unable to parse time: %s", err)
 		}
 		msgTime = msgTime.Add(timeWaitDuration)
-		msg = append(msg, fmt.Sprintf("You have until %s (%s) to restart `garbaged` if you wish to stop this process.", msgTime.Format("15:04:05 MST"), conf.Slack.TimeWait))
+		msg = append(msg, fmt.Sprintf("You have until %s (%s) to restart `garbaged` or react to this message if you wish to stop this process.", msgTime.Format("15:04:05 MST"), conf.Slack.TimeWait))
 		opts := slack.MsgOptionCompose(
 			slack.MsgOptionAsUser(true),
 			slack.MsgOptionDisableLinkUnfurl(),
 			slack.MsgOptionText(strings.Join(msg, "\n"), false),
 		)
 
+		var messages []slack.ItemRef
 		for _, channel := range conf.Slack.Channels {
 			channelID, timestamp, err := api.PostMessage(channel, opts)
 			if err != nil {
 				log.Warnf("%s\n", err)
 			}
 			log.Infof("Message successfully sent to channel %s(%s) at %s", channel, channelID, timestamp)
+			messages = append(messages, slack.ItemRef{Channel: channelID, Timestamp: timestamp})
 		}
 
 		// Also if we're using slack, we have a built-in timer that lets people
@@ -140,7 +142,37 @@ func pickupTrash(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		time.Sleep(slackNotificationWait)
-		log.Infof("Slack notification wait passed, continuing...")
+		log.Infof("Slack notification wait passed, checking for reactions...")
+		for _, message := range messages {
+			reactions, err := api.GetReactions(message, slack.NewGetReactionsParameters())
+			if err != nil {
+				log.Warnf("%s\n", err)
+			}
+			if len(reactions) > 0 {
+				abortUser := reactions[0].Users[0]
+				log.Warnf(fmt.Sprintf("Slack message was reacted to by %s, aborting!", abortUser))
+				var msg []string
+				msg = append(msg, fmt.Sprintf(":vertical_traffic_light: Taxi stop was requested by <@%s>, aborting!", abortUser))
+
+				opts := slack.MsgOptionCompose(
+					slack.MsgOptionAsUser(true),
+					slack.MsgOptionDisableLinkUnfurl(),
+					slack.MsgOptionText(strings.Join(msg, "\n"), false),
+				)
+
+				for _, channel := range conf.Slack.Channels {
+					channelID, timestamp, err := api.PostMessage(channel, opts)
+					if err != nil {
+						log.Warnf("%s\n", err)
+					}
+					log.Infof("Message successfully sent to channel %s(%s) at %s", channel, channelID, timestamp)
+				}
+				lastPickupTime = funcStartTime
+				pickupLock = false
+				return
+			}
+		}
+		log.Infof("No reactions found, continuing...")
 	}
 
 	// different regions will have different creds, so let's store them somewhere
