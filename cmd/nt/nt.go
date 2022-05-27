@@ -139,7 +139,7 @@ func getInstanceIdentity() (string, string, error) {
 		return "", "", err
 	}
 
-	iid := strings.TrimRight(iidBuf.String(), "\r\n")
+	iid := base64.StdEncoding.EncodeToString([]byte(iidBuf.String()))
 
 	sigBytes, err := client.GetDynamicData(ctx, &imds.GetDynamicDataInput{
 		Path: "instance-identity/signature",
@@ -154,7 +154,7 @@ func getInstanceIdentity() (string, string, error) {
 		return "", "", err
 	}
 
-	sig := base64.StdEncoding.EncodeToString([]byte(sigBuf.String()))
+	sig := strings.TrimRight(sigBuf.String(), "\r\n")
 
 	return iid, sig, nil
 }
