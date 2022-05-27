@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
@@ -123,11 +124,15 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.Create(&trashedHost).Error; err != nil {
-		resp := response{Accepted: false, Context: err.Error()}
-		jsonOutput, _ := json.Marshal(&resp)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(jsonOutput)
-		return
+		// I don't love this, but the gorm "errors.Is" doesn't have something for this, and in this case
+		// it's okay -- multiple people may `sudo nt` a host
+		if !strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			resp := response{Accepted: false, Context: err.Error()}
+			jsonOutput, _ := json.Marshal(&resp)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(jsonOutput)
+			return
+		}
 	}
 	log.Infof("/v1/trash/new: ACK %s:%s(%s/%s)%s",
 		conf.Accounts[myIID.AccountID].Name, trashedHost.Host, trashedHost.Role,
