@@ -11,9 +11,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres" // Postgres driver
 	"github.com/threatstack/trashtaxi/config"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func setupDB(dbcfg config.DatabaseConfig) (db *gorm.DB, err error) {
@@ -31,14 +31,9 @@ func setupDB(dbcfg config.DatabaseConfig) (db *gorm.DB, err error) {
 	if dbcfg.SSLRootCert != "" {
 		sslRootCertOption = " sslrootcert=" + dbcfg.SSLRootCert
 	}
-	dbString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s%s",
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s%s",
 		dbcfg.Host, dbcfg.Port, dbcfg.User, dbcfg.Pass, dbcfg.Name, dbcfg.SSLMode, sslRootCertOption)
-	db, err = gorm.Open("postgres", dbString)
-	if conf.Debug {
-		db.LogMode(true)
-	} else {
-		db.LogMode(false)
-	}
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
