@@ -1,3 +1,8 @@
+// tt - an API tool for Trash Taxi
+//
+// Copyright 2018-2022 F5 Inc.
+// Licensed under the BSD 3-clause license; see LICENSE.md for more information.
+
 package main
 
 import (
@@ -24,9 +29,9 @@ type trash struct {
 func getTrash(all bool, c *cli.Context) {
 	trash := trashResponse{}
 	var endpoint string
-	if all == false {
+	if !all {
 		endpoint = fmt.Sprintf("%s/trash", apiEndpoint)
-	} else if all == true {
+	} else {
 		endpoint = fmt.Sprintf("%s/trash/all", apiEndpoint)
 	}
 	resp, err := getFromEndpoint(endpoint)
@@ -53,8 +58,7 @@ type cleanupResponse struct {
 
 func cleanupTrash(c *cli.Context) {
 	endpointResponse := cleanupResponse{}
-	var endpoint string
-	endpoint = fmt.Sprintf("%s/trash/cleanup", apiEndpoint)
+	endpoint := fmt.Sprintf("%s/trash/cleanup", apiEndpoint)
 	resp, err := postToEndpoint(endpoint)
 	if err != nil {
 		fmt.Printf("*** Could not get from endpoint: %s\n", err)
@@ -101,7 +105,7 @@ func pickupTrash(c *cli.Context) {
 		os.Exit(1)
 	}
 	var reqState string
-	if jsonResponse.Accepted == true {
+	if jsonResponse.Accepted {
 		reqState = "Request Accepted"
 	} else {
 		reqState = "Request Denied"

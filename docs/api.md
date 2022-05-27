@@ -89,17 +89,22 @@ Sample Output:
 ```
 
 ## /v1/trash/new
-This is a POST endpoint that takes a pkcs7-encoded AWS [Instance Identity Document](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html)
-(IID), verifies it, then adds data to the database.
+This is a POST endpoint that takes a base64-encoded AWS [Instance Identity Document](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html) (IID), verifies it, then adds data to the database. This was previously done in one single PKCS7 swoop, however golang 1.16 deprecated the cryptographic algorithms involved.
 
 You can obtain the AWS IID from any EC2 host by running:
 ```
-curl http://169.254.169.254/latest/dynamic/instance-identity/pkcs7 | tr -d '\n'
+curl http://169.254.169.254/latest/dynamic/instance-identity/document | base64'
 ```
+
+You can obtain the RSA Signature from any EC2 host by running:
+```
+curl http://169.254.169.254/latest/dynamic/instance-identity/signature | base64'
+```
+
 
 Sample Input:
 ```
-curl -XPOST -d '{"iid":"IID_OUTPUT_FROM_ABOVE"}' http://localhost:3000/v1/trash/new
+curl -XPOST -d '{"iid":"IID_OUTPUT_FROM_ABOVE","signature":"SIG_OUTPUT_FROM_ABOVE"}' http://localhost:3000/v1/trash/new
 ```
 
 Sample Output:
@@ -114,7 +119,7 @@ Sample Error:
 ```
 {
   "accepted": false,
-  "context": "Unable to verify PKCS7 Document"
+  "context": "Unable to verify instance document"
 }
 ```
 

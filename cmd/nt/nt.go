@@ -1,3 +1,8 @@
+// nt - the tool to launch a new root shell
+//
+// Copyright 2018-2022 F5 Inc.
+// Licensed under the BSD 3-clause license; see LICENSE.md for more information.
+
 package main
 
 import (

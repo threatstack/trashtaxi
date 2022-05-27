@@ -1,3 +1,8 @@
+// lambda-invoker - a sample lambda invoker for trash taxi
+//
+// Copyright 2018-2022 F5 Inc.
+// Licensed under the BSD 3-clause license; see LICENSE.md for more information.
+
 package main
 
 import (
@@ -72,7 +77,7 @@ func doStuff(ctx context.Context) (string, error) {
 	}
 
 	var reqState string
-	if jsonResponse.Accepted == true {
+	if jsonResponse.Accepted {
 		reqState = "Request Accepted"
 	} else {
 		reqState = "Request Denied"
@@ -82,7 +87,7 @@ func doStuff(ctx context.Context) (string, error) {
 		reqState = reqState + fmt.Sprintf(" (Server Message: %s)", jsonResponse.Context)
 	}
 
-	return fmt.Sprintf("%s", reqState), nil
+	return reqState, nil
 }
 
 func main() {

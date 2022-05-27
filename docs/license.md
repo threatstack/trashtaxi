@@ -1,4 +1,6 @@
-Copyright 2018-2022 F5 Inc.
+Trash Taxi was brought into F5 through the acquisition of Threat Stack in October, 2021. 
+
+Copyright 2018-2022 F5, Inc. 
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 

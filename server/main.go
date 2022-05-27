@@ -1,9 +1,8 @@
 // garbaged - clean up manually modified hosts, quick
 // main.go: globals and server init
 //
-// Copyright 2018 Threat Stack, Inc.
+// Copyright 2018-2022 F5 Inc.
 // Licensed under the BSD 3-clause license; see LICENSE.md for more information.
-// Author: Patrick T. Cable II <pat.cable@threatstack.com>
 
 package server
 
@@ -13,11 +12,11 @@ import (
 	"os"
 	"time"
 
+	graylog "github.com/gemnasium/logrus-graylog-hook/v3"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 	"github.com/threatstack/trashtaxi/config"
-	graylog "gopkg.in/gemnasium/logrus-graylog-hook.v2"
+	"gorm.io/gorm"
 )
 
 // Global vars for server: conf and db and accounts

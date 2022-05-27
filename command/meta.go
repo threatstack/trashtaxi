@@ -1,9 +1,8 @@
 // garbaged - clean up manually modified hosts, quick
-// meta.go: subcommand inheritance stuff
+// meta.go: subcommand inheritance header
 //
-// Copyright 2018 Threat Stack, Inc.
+// Copyright 2018-2022 F5 Inc.
 // Licensed under the BSD 3-clause license; see LICENSE.md for more information.
-// Author: Patrick T. Cable II <pat.cable@threatstack.com>
 
 package command
 

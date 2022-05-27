@@ -1,3 +1,8 @@
+// tt - an API tool for Trash Taxi
+//
+// Copyright 2018-2022 F5 Inc.
+// Licensed under the BSD 3-clause license; see LICENSE.md for more information.
+
 package main
 
 import (
@@ -61,7 +66,7 @@ func addHoliday(c *cli.Context) {
 		os.Exit(1)
 	}
 	var reqState string
-	if jsonResponse.Accepted == false {
+	if !jsonResponse.Accepted {
 		reqState = "Request Denied"
 	}
 
@@ -97,7 +102,7 @@ func rmHoliday(c *cli.Context) {
 		os.Exit(1)
 	}
 	var reqState string
-	if jsonResponse.Accepted == false {
+	if !jsonResponse.Accepted {
 		reqState = "Request Denied "
 	}
 

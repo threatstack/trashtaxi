@@ -5,3 +5,5 @@ test_*
 *.pem
 .DS_Store
 docs/_site
+*.crt
+*.key
