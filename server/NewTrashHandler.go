@@ -48,21 +48,11 @@ func newTrash(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rawSig, err := base64.StdEncoding.DecodeString(trash.Signature)
-	if err != nil {
-		log.Warnf("/v1/trash/new: Unable to un-base64 signature")
-		resp := response{Accepted: false, Context: "Unable to un-base64 signature"}
-		jsonOutput, _ := json.Marshal(&resp)
-		w.WriteHeader(http.StatusForbidden)
-		w.Write(jsonOutput)
-		return
-	}
-
 	var myIID ec2metadata.EC2InstanceIdentityDocument
 	json.Unmarshal(rawIID, &myIID)
 
 	// Perform verification.
-	validate := verifyIID(rawIID, rawSig)
+	validate := verifyIID(rawIID, []byte(trash.Signature))
 	if validate != nil {
 		log.Warnf("/v1/trash/new: Unable to verify instance document")
 		resp := response{Accepted: false, Context: "Unable to verify instance document"}

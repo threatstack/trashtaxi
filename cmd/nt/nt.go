@@ -74,8 +74,8 @@ func main() {
 		// send to endpoint
 		endpoint := ttConfig.Endpoint + "/v1/trash/new"
 		payload := map[string]string{
-			"iid":       sig,
-			"signature": iid,
+			"iid":       iid,
+			"signature": sig,
 		}
 		shipIID, _ := json.Marshal(payload)
 		resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(shipIID))
@@ -139,9 +139,7 @@ func getInstanceIdentity() (string, string, error) {
 		return "", "", err
 	}
 
-	iid := base64.StdEncoding.EncodeToString([]byte(iidBuf.String()))
-
-	fmt.Printf("%+v\n", iidBuf.String())
+	iid := strings.TrimRight(iidBuf.String(), "\r\n")
 
 	sigBytes, err := client.GetDynamicData(ctx, &imds.GetDynamicDataInput{
 		Path: "instance-identity/signature",
