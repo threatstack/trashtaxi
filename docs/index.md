@@ -38,3 +38,4 @@ Interested in giving Trash Taxi a try?
 * Take a look at the [Getting Started](getstarted.html) guide.
 * Make your [Configuration](config.html) file.
 * Utilize the `garbaged` [API](api.html) to pick up the trash!
+* Find out more about Trash Taxi's [licensing and copyright](license.md).
